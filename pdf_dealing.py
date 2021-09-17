@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/9/3 13:25 
 # @Author : Kate
-# @File : pdf_deeling.py
+# @File : pdf_dealing.py
 # @
 
 import os

@@ -10,8 +10,8 @@
 - setting.py 用于路径等的设置
   
 ### 功能说明
-- del_file.py 用于批量删除某文件夹下的文件
-- pdf_deeling.py 用于pdf的各种处理
+- common_files_dealing.py 用于批量处理文件
+- pdf_dealing.py 用于pdf的各种处理
 
 
 

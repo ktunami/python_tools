@@ -4,8 +4,9 @@
 # @Author : Kate
 # @File : main.py
 
-import pdf_deeling as pdf
+import pdf_dealing as pdf
+import common_files_dealing as F
 
 
 if __name__ == "__main__":
-    pdf.merge_pdfs('hh', 'hh')
+    pdf.merge_pdfs_sub_folder('aaa')

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time : 2021/9/3 12:38 
 # @Author : Kate
-# @File : del_file.py 
+# @File : common_files_dealing.py
 # @
 
 import os
@@ -43,3 +43,16 @@ def del_folder_files(src_folder, file_type, remain_num):
     if len(files) > 0:
         for item in files:
             os.remove(item)
+
+
+def mkdir(folders):
+    """ 创建文件夹
+    :param folders: 文件夹名称列表
+    """
+    for folder in folders:
+        path = src_path + folder
+        if not os.path.exists(path):
+            os.makedirs(path)
+            print('create ' + path)
+        else:
+            print(path + ' already exists')
