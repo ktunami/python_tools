@@ -4,9 +4,10 @@
 # @Author : Kate
 # @File : main.py
 
-import pdf_dealing as pdf
+from pdf_dealing import *
 import common_files_dealing as F
-
+import pdfkit
+from common_files_dealing import *
 
 if __name__ == "__main__":
-    pdf.merge_pdfs_sub_folder('aaa')
+    merge_pdfs_sub_folder('jjj')

@@ -56,3 +56,14 @@ def mkdir(folders):
             print('create ' + path)
         else:
             print(path + ' already exists')
+
+
+def change_filename_pdf(folder):
+    path = src_path + folder
+    files = os.listdir(path)
+    n = 0
+    for file in files:
+        oldname = path + os.sep + file  # os.sep添加系统分隔符
+        newname = path + os.sep + file + '.pdf'
+        os.rename(oldname, newname)  # 用os模块中的rename方法对文件改名
+        print(oldname, '======>', newname)
