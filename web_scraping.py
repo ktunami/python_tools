@@ -14,8 +14,10 @@ import http.client
 import os
 from setting import *
 from pdf_dealing import *
+import re
+from common_files_dealing import *
 
-the_url = "https://python3-cookbook.readthedocs.io/zh_CN/latest/"
+the_url = "https://numpy123.com"
 
 
 def get_html(url):
@@ -54,7 +56,10 @@ def get_html(url):
 
 def get_hrefs_titles(start, end, content):
     lis = content.find_all('a')
-    lis = lis[start:end]
+    if end == 0:
+        lis = lis[start:]
+    else:
+        lis = lis[start:end]
     links = [li['href'] for li in lis]
     texts = [li.text for li in lis]
     return links, texts
@@ -63,23 +68,92 @@ def get_hrefs_titles(start, end, content):
 soup = BeautifulSoup(get_html(the_url), features="html.parser")
 div = soup.find('div', class_='wy-menu wy-menu-vertical')
 
-hrefs, titles = get_hrefs_titles(2, -3, div)
+hrefs, titles = get_hrefs_titles(0, 0, div)
 
+
+pattern = re.compile(r'^#')
+new_href = []
+new_title = []
 for href, title in zip(hrefs, titles):
-    url = the_url + href
-    sub_soup = BeautifulSoup(get_html(url), features="html.parser")
-    ul = sub_soup.find_all('li', class_='toctree-l2')
-    sub_link = [the_url + li.a['href'][3:] for li in ul]
-    sub_title = [li.a.text for li in ul]
-    # make folder
-    folder = src_path + 'jjj/' + title.replace('/', '')
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    if not pattern.match(href):
+        new_href.append(href)
+        new_title.append(title)
+hrefs = new_href
+titles = new_title
+
+l = 0
+for href, title in zip(hrefs, titles):
+    print(href, '  -', l, '-  ', title)
+    l = l + 1
+
+topics = ['numpy基础篇', 'numpy进阶篇', '深度学习基础教程', 'numpy手册', 'numpy常用API']
+
+
+def get_path(num):
+    if 1 <= num <= 5:
+        return True, topics[0]
+    elif 6 <= num <= 10:
+        return True, topics[1]
+    elif 11 <= num <= 22:
+        return True, topics[2]
+    elif 29 <= num <= 40:
+        return True, topics[3]
+    elif 41 <= num <= 71:
+        return True, topics[4]
     else:
-        print(folder + ' already exists')
-    for sub_link, sub_title in zip(sub_link, sub_title):
-        sub_path = folder + '/' + sub_title.replace('/', '') + '.pdf'
-        print(sub_path)
-        get_pdf_from_url(sub_path, sub_link)
+        return False, None
 
 
+def get_pages_direct():
+    folder = src_path + 'jjj' + os.sep
+    i = 0
+    for href, title in zip(hrefs, titles):
+        flag, name = get_path(i)
+        if flag:
+            sub_url = the_url + href
+            sub_path = folder + name + os.sep + str(i) + '_' + title.replace('/', '') + '.pdf'
+            print(sub_path, sub_url)
+            get_pdf_from_url(sub_path, sub_url)
+        i = i + 1
+
+
+
+def get_pages(keyword, use_href):
+    folder = src_path + 'jjj' + os.sep
+    i = 1
+    for href, title in zip(hrefs, titles):
+        flag = False
+        if use_href:
+            if keyword.match(href):
+                flag = True
+        else:
+            if keyword.match(title):
+                flag = True
+        if flag:
+            sub_url = the_url + '/' + href
+            sub_path = folder + os.sep + str(i) + '_' + title.replace('/', '') + '.pdf'
+            print(sub_path, sub_url)
+            get_pdf_from_url(sub_path, sub_url)
+            i = i + 1
+
+
+def get_sub_pages():
+    for href, title in zip(hrefs, titles):
+        url = the_url + href
+        sub_soup = BeautifulSoup(get_html(url), features="html.parser")
+        ul = sub_soup.find_all('li', class_='toctree-l2')
+        sub_link = [the_url + li.a['href'][3:] for li in ul]
+        sub_title = [li.a.text for li in ul]
+        # make folder
+        folder = src_path + 'jjj/' + title.replace('/', '')
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        else:
+            print(folder + ' already exists')
+        for sub_link, sub_title in zip(sub_link, sub_title):
+            sub_path = folder + '/' + sub_title.replace('/', '') + '.pdf'
+            print(sub_path)
+            get_pdf_from_url(sub_path, sub_link)
+
+
+get_pages_direct()

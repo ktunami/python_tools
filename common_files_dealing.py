@@ -8,6 +8,7 @@
 import os
 import glob
 from setting import *
+import re
 
 
 def del_subfolder_files(src_folder, file_type, remain_num):
@@ -67,3 +68,21 @@ def change_filename_pdf(folder):
         newname = path + os.sep + file + '.pdf'
         os.rename(oldname, newname)  # 用os模块中的rename方法对文件改名
         print(oldname, '======>', newname)
+
+
+def deal_sub_files(src_folder, file_type, callback):
+    """  处理某路径下的所有子文件夹中的同类型文件
+    :param src_folder: 输入文件夹名
+    :param file_type: 文件类型
+    :param callback: 文件处理函数
+    """
+    src_dir = src_path + src_folder
+    dirs = os.listdir(src_dir)
+    file_name = '/*.' + file_type
+    dirs.remove('.DS_Store')
+    for path in dirs:
+        c_dir = src_dir + '/' + path
+        if os.path.isdir(c_dir):
+            file_names = glob.glob(c_dir + file_name)
+            for f in file_names:
+                callback(f)

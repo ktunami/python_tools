@@ -7,11 +7,14 @@
 
 import os
 from PyPDF2 import PdfFileMerger, PdfFileWriter, PdfFileReader
+import pdfkit
+
 from setting import *
 import os
 import asyncio
 from pyppeteer import launch
 from setting import *
+from markdown import markdown
 
 
 async def save_pdf(url, pdf_path):
@@ -50,7 +53,7 @@ def merge_pdfs(src_folder, output_name, add_bookmark=False):
     src_dir = src_path + src_folder
     print(src_dir)
     pdf_lst = [f for f in os.listdir(src_dir) if f.endswith('.pdf')]
-    pdf_lst.sort(key=lambda x: float(x.split(' ')[0].split('.')[1]))
+    pdf_lst.sort(key=lambda x: float(x.split('_')[0]))
     print(pdf_lst)
     pdf_lst = [os.path.join(src_dir, filename) for filename in pdf_lst]
     out_file = tar_dir + '/' + output_name + '.pdf'
@@ -78,3 +81,20 @@ def merge_pdfs_sub_folder(src_folder):
         c_dir = src_folder + '/' + sub_folder
         print(c_dir)
         merge_pdfs(c_dir, sub_folder, True)
+
+
+def md_to_pdf(input_path):
+    """
+    MarkDown转pdf
+    :param input_path: md文档路径
+    :return:
+    """
+    output_path = tar_dir
+    res, output_name = os.path.split(input_path)
+    output_name = output_name.replace('.md', '.pdf')
+    output_path = output_path + os.sep + output_name
+    config = "pandoc '{}' -o '{}' --pdf-engine=xelatex -V mainfont='PingFang SC' --template=template.tex"
+    config = config + " --resource-path=" + '.:' + res
+    print(config)
+    cmd = config.format(input_path, output_path)
+    os.system(cmd)
