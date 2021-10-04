@@ -4,12 +4,11 @@
 # @Author : Kate
 # @File : main.py
 
-from pdf_dealing import *
-import common_files_dealing as F
-import pdfkit
-from common_files_dealing import *
+from common_files_dealing import FilesDeal as dd
+
 
 if __name__ == "__main__":
-   # merge_pdfs_sub_folder('jjj')
-   deal_sub_files('Python-100-Days-master', 'md', md_to_pdf)
-   # md_to_pdf('/Users/kate/Desktop/Python-100-Days-master/Day31-35/31-35.玩转Linux操作系统.md')
+    dd.separate_files_to_folders('jjj/刷题python版html', '刷题python版html',  1, 1400, 50, '.')
+    # PDF.merge_pdfs_sub_folder('jjj', PDF.get_sort_key('.'))
+    # dd.deal_files_cascade('jjj', 'html', dd.del_files_callback)
+

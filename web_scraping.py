@@ -3,24 +3,26 @@
 # @Time : 2021/9/24 10:02
 # @Author : Kate
 # @File : web_scraping.py
-import pdfkit
+
+import os
+import re
+
 from bs4 import BeautifulSoup
-import requests
-import csv
 import random
 import time
 import socket
 import http.client
-import os
+from common_files_dealing import FilesDeal as dd
 from setting import *
-from pdf_dealing import *
-import re
-from common_files_dealing import *
-
-the_url = "https://numpy123.com"
+import requests
 
 
 def get_html(url):
+    """
+    获取网页源码
+    :param url: 网页url
+    :return:
+    """
     header = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
                   'application/signed-exchange;v=b3;q=0.9',
@@ -54,7 +56,52 @@ def get_html(url):
     return rep.text
 
 
+def save_part_html(href, name, err, css_style=''):
+    """
+    获取网页部分html并存储
+    :param href: 网页链接
+    :param name: 标题
+    :param err: 错误信息
+    :param css_style: 样式
+    :return:
+    """
+    sp = BeautifulSoup(get_html(href), features="html.parser")
+    content = sp.find('div', class_='article_content')
+    src_html = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Document</title>
+    </head>
+    <body>
+        <p style='font-size:25px;text-align:center'>{title}</p>
+        <br/>
+        {content}
+    </body>
+    <style> {page_style} </style>
+    </html>
+    '''
+    dd.make_dir(SRC_PATH + HTML_FOLDER)
+    try:
+        with open(SRC_PATH + HTML_FOLDER + os.sep + name + '.html', mode='w+', encoding='utf-8') as f:
+            f.write(src_html.format(title=name, content=str(content), page_style=css_style))
+    except Exception as ex_results:
+        err.append('get_part_html错误：start---->')
+        err.append(href)
+        err.append(name)
+        err.append(ex_results)
+        err.append('get_part_html错误：<----end')
+
+
 def get_hrefs_titles(start, end, content):
+    """
+    列表中分别获取href和相应标题
+    :param start: 从start开始
+    :param end: 到end为止
+    :param content: html列表（每个元素含一个href和一个title）
+    :return:
+    """
     lis = content.find_all('a')
     if end == 0:
         lis = lis[start:]
@@ -65,95 +112,55 @@ def get_hrefs_titles(start, end, content):
     return links, texts
 
 
-soup = BeautifulSoup(get_html(the_url), features="html.parser")
-div = soup.find('div', class_='wy-menu wy-menu-vertical')
-
-hrefs, titles = get_hrefs_titles(0, 0, div)
-
-
-pattern = re.compile(r'^#')
-new_href = []
-new_title = []
-for href, title in zip(hrefs, titles):
-    if not pattern.match(href):
-        new_href.append(href)
-        new_title.append(title)
-hrefs = new_href
-titles = new_title
-
-l = 0
-for href, title in zip(hrefs, titles):
-    print(href, '  -', l, '-  ', title)
-    l = l + 1
-
-topics = ['numpy基础篇', 'numpy进阶篇', '深度学习基础教程', 'numpy手册', 'numpy常用API']
+def remove_cur_page_links(links, names):
+    """
+    将本页链接去除
+    :param links: 链接列表
+    :param names: 标题列表
+    :return: 处理后的链接和标题列表
+    """
+    pattern = re.compile(r'^#')
+    new_href = []
+    new_title = []
+    for href, title in zip(links, names):
+        if not pattern.match(href):
+            new_href.append(href)
+            new_title.append(title)
+    return new_href, new_title
 
 
-def get_path(num):
-    if 1 <= num <= 5:
-        return True, topics[0]
-    elif 6 <= num <= 10:
-        return True, topics[1]
-    elif 11 <= num <= 22:
-        return True, topics[2]
-    elif 29 <= num <= 40:
-        return True, topics[3]
-    elif 41 <= num <= 71:
-        return True, topics[4]
-    else:
-        return False, None
+def print_links_titles(links, names):
+    """
+    打印链接和标题
+    :param links: 链接列表
+    :param names: 标题列表
+    :return:
+    """
+    l = 0
+    for href, title in zip(links, names):
+        print(href, '  -', l, '-  ', title)
+        l = l + 1
 
 
-def get_pages_direct():
-    folder = src_path + 'jjj' + os.sep
-    i = 0
-    for href, title in zip(hrefs, titles):
-        flag, name = get_path(i)
-        if flag:
-            sub_url = the_url + href
-            sub_path = folder + name + os.sep + str(i) + '_' + title.replace('/', '') + '.pdf'
-            print(sub_path, sub_url)
-            get_pdf_from_url(sub_path, sub_url)
-        i = i + 1
+def get_pages_direct(links, names):
+    """
+    获取并保存页面html，保存名称为names
+    :param links: 页面链接
+    :param names: 保存名称
+    :return:  返回错误信息
+    """
+    err = []
+    for href, title in zip(links, names):
+        tit = title.split('-')[2].strip()
+        save_part_html(href, tit.replace('/', ''))
+    return err
 
 
+if __name__ == "__main__":
+    the_url = "https://blog.csdn.net/qq_32424059/article/details/88855423"
+    soup = BeautifulSoup(get_html(the_url), features="html.parser")
+    # div = soup.find('div', class_='table-box')
+    div = soup.find('table')
+    hrefs, titles = get_hrefs_titles(0, 0, div)
+    print(get_pages_direct(hrefs, titles))
 
-def get_pages(keyword, use_href):
-    folder = src_path + 'jjj' + os.sep
-    i = 1
-    for href, title in zip(hrefs, titles):
-        flag = False
-        if use_href:
-            if keyword.match(href):
-                flag = True
-        else:
-            if keyword.match(title):
-                flag = True
-        if flag:
-            sub_url = the_url + '/' + href
-            sub_path = folder + os.sep + str(i) + '_' + title.replace('/', '') + '.pdf'
-            print(sub_path, sub_url)
-            get_pdf_from_url(sub_path, sub_url)
-            i = i + 1
-
-
-def get_sub_pages():
-    for href, title in zip(hrefs, titles):
-        url = the_url + href
-        sub_soup = BeautifulSoup(get_html(url), features="html.parser")
-        ul = sub_soup.find_all('li', class_='toctree-l2')
-        sub_link = [the_url + li.a['href'][3:] for li in ul]
-        sub_title = [li.a.text for li in ul]
-        # make folder
-        folder = src_path + 'jjj/' + title.replace('/', '')
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-        else:
-            print(folder + ' already exists')
-        for sub_link, sub_title in zip(sub_link, sub_title):
-            sub_path = folder + '/' + sub_title.replace('/', '') + '.pdf'
-            print(sub_path)
-            get_pdf_from_url(sub_path, sub_link)
-
-
-get_pages_direct()
