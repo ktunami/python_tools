@@ -15,6 +15,7 @@ import http.client
 from common_files_dealing import FilesDeal as dd
 from setting import *
 import requests
+import chardet
 
 
 def get_html(url):
@@ -24,7 +25,8 @@ def get_html(url):
     :return:
     """
     header = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,'
+                  '*/*;q=0.8, '
                   'application/signed-exchange;v=b3;q=0.9',
         'Accept-Encoding': 'gzip, deflate, br',
         'Accept-Language': 'zh-CN,zh;q=0.9',
@@ -35,7 +37,9 @@ def get_html(url):
     timeout = random.choice(range(80, 180))
     while True:
         try:
-            rep = requests.get(url, headers=header, timeout=timeout)
+            # rep = requests.get(url, headers=header, timeout=timeout)
+            rep = requests.get(url, timeout=timeout)
+            # rep.encoding = rep.apparent_encoding
             rep.encoding = 'utf-8'
             break
         except socket.timeout as e:
@@ -66,7 +70,8 @@ def save_part_html(href, name, err, css_style=''):
     :return:
     """
     sp = BeautifulSoup(get_html(href), features="html.parser")
-    content = sp.find('div', class_='article_content')
+    # content = sp.find('div', class_='article_content')
+    content = sp.find('main')
     src_html = '''
     <!DOCTYPE html>
     <html>
@@ -142,25 +147,31 @@ def print_links_titles(links, names):
         l = l + 1
 
 
-def get_pages_direct(links, names):
+def get_pages_direct(links, names, use_base=False, base_url=None):
     """
     获取并保存页面html，保存名称为names
     :param links: 页面链接
     :param names: 保存名称
+    :param use_base:  是否用base_url
+    :param base_url: 根目录
     :return:  返回错误信息
     """
     err = []
     for href, title in zip(links, names):
-        tit = title.split('-')[2].strip()
-        save_part_html(href, tit.replace('/', ''))
+        tit = title.strip()
+        if use_base:
+            save_part_html(base_url + '/' + href, tit.replace('/', ''), err)
+        else:
+            save_part_html(href, tit.replace('/', ''), err)
     return err
 
 
 if __name__ == "__main__":
-    the_url = "https://blog.csdn.net/qq_32424059/article/details/88855423"
+    the_url = "https://pandas.pydata.org/pandas-docs/stable/user_guide"
+            # "https://pandas.pydata.org/pandas-docs/stable/_images/series_plot_basic.png"
     soup = BeautifulSoup(get_html(the_url), features="html.parser")
-    # div = soup.find('div', class_='table-box')
-    div = soup.find('table')
+    div = soup.find('div', class_='bd-toc-item active')
+    # div = soup.find('table')
     hrefs, titles = get_hrefs_titles(0, 0, div)
-    print(get_pages_direct(hrefs, titles))
+    print(get_pages_direct(hrefs, titles, True, the_url))
 

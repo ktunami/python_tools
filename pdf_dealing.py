@@ -70,16 +70,37 @@ class PDF(object):
         for f in pdf_lst:
             print(f)
         pdf_lst = [os.path.join(src_dir, filename) for filename in pdf_lst]
-        out_file = TAR_DIR + '/' + output_name + '.pdf'
+        out_file = TAR_DIR + '/' + output_name + '_tmp' + '.pdf'
+        out_file_final = TAR_DIR + '/' + output_name + '.pdf'
         file_merger = PdfFileMerger()
         print('合并了', len(pdf_lst), '个文件')
-        for pdf in pdf_lst:
+        all_sub_marks = []
+        for pdf_pt in pdf_lst:
             chap_name = None
             if add_bookmark:
-                chap_name = os.path.split(pdf)[1][:-4]
-            file_merger.append(pdf, bookmark=chap_name, import_bookmarks=False)
-            print('add file: ', pdf)
+                chap_name = os.path.split(pdf_pt)[1][:-4]
+                print(chap_name)
+            with open(pdf_pt, 'rb') as f:
+                pdf = PdfFileReader(f)
+                all_sub_marks.append(pdf.getOutlines())
+                print(type(all_sub_marks[0]))
+                file_merger.append(pdf, bookmark=chap_name, import_bookmarks=False)
+            print('add file: ', pdf_pt)
         file_merger.write(out_file)
+        file_merger.close()
+        with open(out_file, 'rb') as f:
+            pdf = PdfFileReader(f)
+            output = PdfFileWriter()
+            output.appendPagesFromReader(pdf)
+            base_marks = pdf.getOutlines()
+            for i in range(len(base_marks)):
+                base_mark = base_marks[i]
+                base_page = base_mark['/Page']
+                parent = output.addBookmark(base_mark['/Title'], base_page)
+                for j in all_sub_marks[i]:
+                    output.addBookmark(j['/Title'], base_page + j['/Page'], parent=parent)
+            with open(out_file_final, 'wb') as f:
+                output.write(f)
 
     @classmethod
     def merge_pdfs_sub_folder(cls, src_folder, sub_sort_key=None, add_bookmark=True):
@@ -142,3 +163,14 @@ class PDF(object):
             err.append(output_path)
             err.append(ex_results)
             err.append('md_to_pdf错误：<----end')
+
+    @staticmethod
+    def split_pdf_pages(file_path, st, end_page, output_name):
+        output = PdfFileWriter()
+        input_path = SRC_PATH + file_path
+        pdf_file = PdfFileReader(open(input_path, "rb"))
+        start_page = st - 1
+        for i in range(start_page, end_page):
+            output.addPage(pdf_file.getPage(i))
+        output_stream = open(TAR_DIR + os.sep + output_name, "wb")
+        output.write(output_stream)

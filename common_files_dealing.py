@@ -115,8 +115,6 @@ class FilesDeal(object):
         if not os.path.exists(path):
             os.makedirs(path)
             print('create ' + path)
-        else:
-            print(path + ' already exists')
 
     @classmethod
     def make_src_folders(cls, folder, sub_folder_list):
@@ -125,6 +123,13 @@ class FilesDeal(object):
         for f in sub_folder_list:
             p = path + os.sep + f
             cls.make_dir(p)
+
+    @classmethod
+    def print_file_names(cls, folder):
+        li = os.listdir(SRC_PATH + folder)
+        li.sort()
+        for i in li:
+            print(i)
 
     @staticmethod
     def check_file_type(file_name, file_type):
