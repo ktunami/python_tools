@@ -8,8 +8,10 @@
 from PyPDF2 import PdfFileMerger, PdfFileWriter, PdfFileReader
 import pdfkit
 import os
+import re
 import asyncio
 from pyppeteer import launch
+from itertools import groupby
 from setting import *
 
 
@@ -174,3 +176,46 @@ class PDF(object):
             output.addPage(pdf_file.getPage(i))
         output_stream = open(TAR_DIR + os.sep + output_name, "wb")
         output.write(output_stream)
+
+
+    @classmethod
+    def add_book_marks_cascate(cls, output, bias, idx, book_mark, level, parent, parent_num):
+        if idx[level] < len(book_mark[level]):
+            if parent is None:
+                p = output.addBookmark(book_mark[level][idx[level]][1], book_mark[level][idx[level]][2] + bias, parent=parent)
+                if level + 1 < len(idx):
+                    cls.add_book_marks_cascate(output, bias, idx, book_mark, level + 1, p, book_mark[level][idx[level]][0])
+                idx[level] += 1
+                cls.add_book_marks_cascate(output, bias, idx, book_mark, level, parent, parent_num)
+            else:
+                if book_mark[level][idx[level]][0].startswith(parent_num):
+                    p = output.addBookmark(book_mark[level][idx[level]][1], book_mark[level][idx[level]][2] + bias, parent=parent)
+                    if level+1 < len(idx):
+                        cls.add_book_marks_cascate(output, bias, idx, book_mark, level + 1, p, book_mark[level][idx[level]][0])
+                    idx[level] += 1
+                    cls.add_book_marks_cascate(output, bias, idx, book_mark, level, parent, parent_num)
+
+
+    @classmethod
+    def get_book_mark_list(cls, book_mark_file, levels, pdf_file, bias):
+        book_mark = [[] for i in range(levels)]
+        with open(SRC_PATH + book_mark_file, "r") as f:
+            for line in f.readlines():
+                raw_list = [''.join(list(g)) for k, g in groupby(line.strip(), key=lambda x: x.isdigit())]
+                title = ''.join(raw_list[:-1])
+                page = int(raw_list[-1])
+                item_number = (re.findall(r'[0-9|.]+', title)[0]).strip()
+                if item_number[-1] == '.':
+                    item_number = item_number[:-1]
+                dot_num = item_number.count('.')
+                book_mark[dot_num].append([item_number, title, page])
+        with open(SRC_PATH + pdf_file, 'rb') as f:
+            pdf = PdfFileReader(f)
+            output = PdfFileWriter()
+            output.appendPagesFromReader(pdf)
+            idx = [0 for i in range(levels)]
+            cls.add_book_marks_cascate(output, bias, idx, book_mark, 0, None, None)
+            with open(TAR_DIR + os.sep + pdf_file, 'wb') as f:
+                output.write(f)
+
+

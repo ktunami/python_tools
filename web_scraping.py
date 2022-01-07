@@ -69,9 +69,12 @@ def save_part_html(href, name, err, css_style=''):
     :param css_style: 样式
     :return:
     """
+    href = 'https://www.baidu.com'
     sp = BeautifulSoup(get_html(href), features="html.parser")
     # content = sp.find('div', class_='article_content')
-    content = sp.find('main')
+    # content = sp.find('div', class_='markdown_views prism-tomorrow-night-eighties')
+    print(sp)
+    content = sp.find('article')
     src_html = '''
     <!DOCTYPE html>
     <html>
@@ -167,11 +170,13 @@ def get_pages_direct(links, names, use_base=False, base_url=None):
 
 
 if __name__ == "__main__":
-    the_url = "https://pandas.pydata.org/pandas-docs/stable/user_guide"
+    the_url = "https://blog.csdn.net/b1055077005/article/details/100152102"
             # "https://pandas.pydata.org/pandas-docs/stable/_images/series_plot_basic.png"
     soup = BeautifulSoup(get_html(the_url), features="html.parser")
-    div = soup.find('div', class_='bd-toc-item active')
+    div = soup.find('div', class_='markdown_views prism-tomorrow-night-eighties')
     # div = soup.find('table')
-    hrefs, titles = get_hrefs_titles(0, 0, div)
-    print(get_pages_direct(hrefs, titles, True, the_url))
+    # hrefs, titles = get_hrefs_titles(0, 0, div)
+    # print(get_pages_direct(hrefs, titles, True, the_url))
+    err = []
+    save_part_html(the_url, 'aaa', err)
 
