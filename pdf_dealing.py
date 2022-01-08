@@ -168,6 +168,14 @@ class PDF(object):
 
     @staticmethod
     def split_pdf_pages(file_path, st, end_page, output_name):
+        """
+        获取pdf中间连续的几页
+        :param file_path: pdf文件名
+        :param st: 从st开始截取
+        :param end_page: 到end_page截止
+        :param output_name: 输出文件名
+        :return:
+        """
         output = PdfFileWriter()
         input_path = SRC_PATH + file_path
         pdf_file = PdfFileReader(open(input_path, "rb"))
@@ -196,7 +204,18 @@ class PDF(object):
                     cls.add_book_marks_cascate(output, bias, idx, book_mark, level, parent, parent_num)
 
     @classmethod
-    def get_book_mark_list(cls, book_mark_file, levels, pdf_file, bias):
+    def add_nested_book_mark_to_pdf(cls, book_mark_file, levels, pdf_file, bias):
+        """
+        给pdf添加目录，其中目录存放在txt文件中，格式要求如下：
+               目录级别号  名称              页码
+        e.g.      1.2.1  大米饭为什么这么香   92
+               这是第3级的目录
+        :param book_mark_file: 目录文件，是txt文件
+        :param levels: 目录最大的级数
+        :param pdf_file: pdf文件
+        :param bias: 首页偏移量
+        :return:
+        """
         book_mark = [[] for i in range(levels)]
         with open(SRC_PATH + book_mark_file, "r") as f:
             for line in f.readlines():
@@ -209,6 +228,7 @@ class PDF(object):
                 if item_number[-1] == '.':
                     item_number = item_number[:-1]
                 dot_num = item_number.count('.')
+                print([item_number, title, page])
                 book_mark[dot_num].append([item_number, title, page])
         with open(SRC_PATH + pdf_file, 'rb') as f:
             pdf = PdfFileReader(f)
