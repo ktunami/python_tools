@@ -16,5 +16,5 @@ if __name__ == "__main__":
     # PDF.merge_pdfs_sub_folder('jjj')
     # dd.print_file_names('jjj')
     # PDF.split_pdf_pages('1.2_极大似然估计.pdf', 2, 5, '1.2_极大似然估计.pdf')
-    PDF.get_book_mark_list('a.txt', 2, 'BDA3.pdf', 9)
+    PDF.get_book_mark_list('a.txt', 2, 'CNN_book_weixs.pdf', 0)
     print('hello')

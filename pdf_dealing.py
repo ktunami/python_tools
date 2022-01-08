@@ -195,12 +195,13 @@ class PDF(object):
                     idx[level] += 1
                     cls.add_book_marks_cascate(output, bias, idx, book_mark, level, parent, parent_num)
 
-
     @classmethod
     def get_book_mark_list(cls, book_mark_file, levels, pdf_file, bias):
         book_mark = [[] for i in range(levels)]
         with open(SRC_PATH + book_mark_file, "r") as f:
             for line in f.readlines():
+                if line.strip() == '':
+                    continue
                 raw_list = [''.join(list(g)) for k, g in groupby(line.strip(), key=lambda x: x.isdigit())]
                 title = ''.join(raw_list[:-1])
                 page = int(raw_list[-1])
