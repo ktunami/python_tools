@@ -12,6 +12,7 @@
 ### 功能说明
 - common_files_dealing.py 用于批量处理文件
 - pdf_dealing.py 用于pdf的各种处理
+- web_scraping.py 爬虫
 
 
 
